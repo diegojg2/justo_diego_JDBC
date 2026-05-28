@@ -1,6 +1,8 @@
 package examen.justo.diego.dao;
 import examen.justo.diego.motores.MotorSQL;
 
+import java.util.ArrayList;
+
 public abstract class AbstractDAO<T> implements DAO<T> {
     protected MotorSQL motorSQL;
     public AbstractDAO(MotorSQL motorSQL) {
@@ -10,8 +12,6 @@ public abstract class AbstractDAO<T> implements DAO<T> {
         System.out.println("[ERROR] " + e.getMessage());
     }
 
-    /*
-     * CONSULTAS
-     */
+    public abstract ArrayList<T> findByNombre(String nombre);
 
 }

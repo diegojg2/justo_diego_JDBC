@@ -6,32 +6,192 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 
 public class SateliteDAOImpl extends AbstractDAO<Satelite> {
+    private static final String SQL_FIND_ALL = "SELECT * FROM SATELITE ORDER BY id";
+    private static final String SQL_FIND = "SELECT * FROM SATELITE WHERE id = ?";
+    private static final String SQL_INSERT = "INSERT INTO SATELITE (nombre, orbita, peso, coste, activo) VALUES (?, ?, ?, ?, ?)";
+    private static final String SQL_UPDATE = "UPDATE SATELITE SET nombre = ?, orbita = ?, peso = ?, coste = ?, activo = ? WHERE id = ?";
+    private static final String SQL_DELETE = "DELETE FROM SATELITE WHERE id = ?";
+    private static final String SQL_FIND_BY_NOMBRE = "SELECT * FROM SATELITE WHERE nombre = ? ORDER BY nombre";
+    private static final String SQL_FIND_BY_ORBITA = "SELECT * FROM SATELITE WHERE orbita = ? ORDER BY orbita";
+    private static final String SQL_FIND_BY_PESO = "SELECT * FROM SATELITE WHERE peso = ? ORDER BY peso DESC";
+
     public SateliteDAOImpl(MotorSQL motorSQL) {
         super(motorSQL);
     }
 
-    @Override
-    public void add(Satelite object) {
-
+    public void check() {
+        try {
+            motorSQL.connect();
+            if (motorSQL.conn != null && !motorSQL.conn.isClosed()) {
+                System.out.println("CONEXION OK");
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
     }
 
     @Override
-    public void update(int id, Satelite object) {
+    public void add(Satelite satelite) {
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_INSERT);
+            motorSQL.getPs().setString(1, satelite.getNombre());
+            motorSQL.getPs().setString(2, satelite.getOrbita());
+            motorSQL.getPs().setLong(3, satelite.getPeso());
+            motorSQL.getPs().setLong(4, satelite.getCoste());
+            motorSQL.getPs().setString(5, satelite.getActivo());
 
+            int rows = motorSQL.executeUpdate();
+            System.out.println("INSERTADOS: " + rows);
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+    }
+
+    @Override
+    public void update(int id, Satelite satelite) {
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_UPDATE);
+            motorSQL.getPs().setString(1, satelite.getNombre());
+            motorSQL.getPs().setString(2, satelite.getOrbita());
+            motorSQL.getPs().setLong(3, satelite.getPeso());
+            motorSQL.getPs().setLong(4, satelite.getCoste());
+            motorSQL.getPs().setString(5, satelite.getActivo());
+            motorSQL.getPs().setInt(6, id);
+            int rows = motorSQL.executeUpdate();
+            System.out.println("ACTUALIZADOS: " + rows);
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
     }
 
     @Override
     public void delete(int id) {
-
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_DELETE);
+            motorSQL.getPs().setInt(1, id);
+            int rows = motorSQL.executeUpdate();
+            System.out.println("BORRADOS: " + rows);
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
     }
 
     @Override
     public Satelite find(int id) {
-        return null;
+        Satelite satelite = null;
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_FIND);
+            motorSQL.getPs().setInt(1, id);
+            ResultSet rs = motorSQL.executeQuery();
+            if (rs.next()) {
+                satelite = mapSatelite(rs);
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+        return satelite;
     }
 
     @Override
     public ArrayList<Satelite> findAll() {
-        return null;
+        ArrayList<Satelite> satelites = new ArrayList<>();
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_FIND_ALL);
+            ResultSet rs = motorSQL.executeQuery();
+            while (rs.next()) {
+                satelites.add(mapSatelite(rs));
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+        return satelites;
+    }
+
+    /*
+     * =========================
+     * CONSULTAS AVANZADAS
+     * =========================
+     */
+
+    public ArrayList<Satelite> findByNombre(String nombre) {
+        ArrayList<Satelite> satelites = new ArrayList<>();
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_FIND_BY_NOMBRE);
+            motorSQL.getPs().setString(1, nombre);
+            ResultSet rs = motorSQL.executeQuery();
+            while (rs.next()) {
+                satelites.add(mapSatelite(rs));
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+        return satelites;
+    }
+
+    public ArrayList<Satelite> findByOrbita(String orbita) {
+        ArrayList<Satelite> satelites = new ArrayList<>();
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_FIND_BY_ORBITA);
+            motorSQL.getPs().setString(1, orbita);
+            ResultSet rs = motorSQL.executeQuery();
+            while (rs.next()) {
+                satelites.add(mapSatelite(rs));
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+        return satelites;
+    }
+
+    public ArrayList<Satelite> findByPeso(String peso) {
+        ArrayList<Satelite> satelites = new ArrayList<>();
+        try {
+            motorSQL.connect();
+            motorSQL.prepare(SQL_FIND_BY_PESO);
+            motorSQL.getPs().setString(1, peso);
+            ResultSet rs = motorSQL.executeQuery();
+            while (rs.next()) {
+                satelites.add(mapSatelite(rs));
+            }
+        } catch (Exception e) {
+            printError(e);
+        } finally {
+            motorSQL.close();
+        }
+        return satelites;
+    }
+
+    private Satelite mapSatelite(ResultSet rs) throws Exception {
+        Satelite pelicula = new Satelite();
+        pelicula.setId(rs.getInt("id"));
+        pelicula.setNombre(rs.getString("nombre"));
+        pelicula.setOrbita(rs.getString("orbita"));
+        pelicula.setPeso(rs.getLong("peso"));
+        pelicula.setCoste(rs.getInt("coste"));
+        pelicula.setActivo(rs.getString("activo"));
+        return pelicula;
     }
 }

@@ -8,7 +8,7 @@ public abstract class MotorSQL {
     protected String user;
     protected String password;
     protected String driver;
-    protected Connection conn;
+    public Connection conn;
     protected PreparedStatement ps;
 
     public MotorSQL(String url, String user, String password, String driver) {
